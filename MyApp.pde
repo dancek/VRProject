@@ -1,15 +1,22 @@
 import java.util.HashMap;
+import java.lang.Exception;
+import processing.opengl.*;
 
 /* Place all your code into this file */
 
 // Your global variables
 color grayishColor = color(128);
+
 final GameStateContext context = new GameStateContext();
 
 // This function is called only once in the setup() function
 void mySetup()
 {
   context.registerState("Menu", new MenuState());
+  context.registerState("SkiJump", new SkiJumpState());
+  
+  context.activateState("Menu");
+  //context.activateState("SkiJump");
 
 }
 
@@ -17,7 +24,7 @@ void mySetup()
 // Place only drawing function calls here!
 void myDraw()
 {
-  //GameStateContext::getInstance().draw();
+    context.draw();
   // Insert your draw code here
   
   // To preserve keystone correction, use only drawing and camera matrix 
@@ -35,7 +42,9 @@ void myDraw()
   translate(300 - controllers6DOF[0].x, // Mirror along x-axis
             300 - controllers6DOF[0].y, // Mirror along y-axis
             controllers6DOF[0].z -100); // Translate in front
+  
   controllers6DOF[0].applyRotation();
+  
   box(30);
   popMatrix();
 }
@@ -43,7 +52,7 @@ void myDraw()
 // This function is called only once in the draw() loop
 void myInteraction()
 {
-  //GameStateContext::getInstance().interact();
+  context.interact();
   // Insert your interaction code here
   
   // If Wiimotes are not present, you can simulate rotation
@@ -360,9 +369,9 @@ class selectablePhysicsCube extends RigidBody implements Selectable
 
     // These glCullFace calls are needed because the perspective matrix 
     // for keystones is still buggy (has a negative eigenvalue). To be fixed.
-    gl.glCullFace(GL.GL_FRONT);
+    //gl.glCullFace(GL.GL_FRONT);
     box(sideLength);
-    gl.glCullFace(GL.GL_BACK);
+    //gl.glCullFace(GL.GL_BACK);
     popMatrix();
   }
 }
@@ -423,54 +432,67 @@ interface GameState
   void interact(int elapsed); 
 }
 
-public class GameStateContext
+class GameStateContext
 { 
   private GameState current;
   
   private HashMap states = new HashMap();
   
-  protected GameStateContext()
-  {
-  
-  }
+  private long last = System.currentTimeMillis();
   
   public void registerState(String id, GameState state)
   {
-    
+    if (!this.states.containsKey(id))
+    {
+      this.states.put(id, state);
+    }
   }
   
   public void removeState(String id)
   {
-    
+    this.states.remove(id);
   }
   
   public void activateState(String id)
   {
-    
+    if (this.states.containsKey(id))
+    {
+      if (this.current != null)
+      {
+        this.current.exit();
+      }
+      
+      this.current = (GameState)this.states.get(id);
+      this.current.enter(); 
+    }
   }
   
   public void interact()
   {
+    long now = System.currentTimeMillis();
+    int elapsed = (int)(now - this.last);
+    this.last = now; 
     
+    this.current.interact(elapsed);
   }
   
   public void draw()
   {
-    
+    this.current.draw();
   }
   
 }
 
-public class MenuState implements GameState
+class MenuState implements GameState
 {
   public void enter()
   {
-   
+    System.out.println("enter");
   }
  
   public void exit()
   {
-   
+    System.out.println("exit");
   }
  
   public void draw()
@@ -484,3 +506,33 @@ public class MenuState implements GameState
   }
 }
 
+class SkiJumpState implements GameState
+{
+  public void enter()
+  {
+    System.out.println("enter");
+  }
+ 
+  public void exit()
+  {
+    System.out.println("exit");
+  }
+ 
+  public void draw()
+  {     
+    pushMatrix();
+    translate(300,300,-100);
+    beginShape(TRIANGLE_STRIP);
+    fill(240,   0, 0); vertex(0, 0, 0);
+    fill(240, 150, 0); vertex(80, 40, 38);
+    fill(250, 250, 0); vertex(75, 88, 50);
+                       vertex(49, 85, 74);
+    endShape();
+    popMatrix();
+  } 
+  
+  public void interact(int elapsed)
+  {
+     
+  }  
+}
