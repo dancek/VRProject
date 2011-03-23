@@ -6,25 +6,25 @@ import processing.opengl.*;
 
 // Your global variables
 color grayishColor = color(128);
+//PFont fontMsg = loadFont("Univers66.vlw.gz");
 
 final GameStateContext context = new GameStateContext();
+final Renderer renderer = new Renderer();
 
 // This function is called only once in the setup() function
 void mySetup()
 {
+  smooth(); 
   context.registerState("Menu", new MenuState());
   context.registerState("SkiJump", new SkiJumpState());
   
   context.activateState("Menu");
-  //context.activateState("SkiJump");
-
 }
 
 // This function is called for each viewport in the draw() loop
 // Place only drawing function calls here!
 void myDraw()
 {
-    context.draw();
   // Insert your draw code here
   
   // To preserve keystone correction, use only drawing and camera matrix 
@@ -32,28 +32,16 @@ void myDraw()
   // scale(), applyMatrix(), box(), sphere() etc.
   // DO NOT use projection matrix altering functions like perspective(), 
   // camera(), resetMatrix(), frustum(), beginCamera(), etc.
-  
-  // Example: Draw a box in front of the controller
-  // controllers6DOF[0] contains input variables for blue controller
-  // controllers6DOF[1] contains input variables for red controller
-  pushMatrix();
-  fill(grayishColor);
-  stroke(255);
-  translate(300 - controllers6DOF[0].x, // Mirror along x-axis
-            300 - controllers6DOF[0].y, // Mirror along y-axis
-            controllers6DOF[0].z -100); // Translate in front
-  
-  controllers6DOF[0].applyRotation();
-  
-  box(30);
-  popMatrix();
+  context.draw();
 }
 
 // This function is called only once in the draw() loop
 void myInteraction()
 {
-  context.interact();
   // Insert your interaction code here
+  context.interact();
+  
+  /* These should be done in the context.interact() method.
   
   // If Wiimotes are not present, you can simulate rotation
   if(INTERFACE_MODE == 0) // If emulating Wiimote with a mouse
@@ -90,7 +78,10 @@ void myInteraction()
   }
   
   if( controllers6DOF[0].buttonB )
+  {
+    context.activateState("SkiJump");
     SHOW_FPS = true;
+  }
   else
     SHOW_FPS = false;
 
@@ -120,6 +111,7 @@ void myInteraction()
                        constrain(128+ redCount*blueCount
                                      /(1+redCount+blueCount), 128, 255),
                        constrain(128+blueCount, 128, 255)               );
+  */
 }
 
 
@@ -422,7 +414,7 @@ void addPhysicsCube()
 }
 
 interface GameState
-{
+{  
   void enter();
    
   void exit();
@@ -484,25 +476,29 @@ class GameStateContext
 }
 
 class MenuState implements GameState
-{
+{ 
   public void enter()
   {
-    System.out.println("enter");
+    
   }
  
   public void exit()
   {
-    System.out.println("exit");
+    
   }
  
   public void draw()
   {
-   
+    renderer.drawText("Press B to skijump", 10, 30, -300, 1);
+    renderer.drawText("TODO: cool graphics and maybe music.", 10, 50, -300, 1);
   } 
   
   public void interact(int elapsed)
   {
-    
+    if(controllers6DOF[0].buttonB || controllers6DOF[1].buttonB)
+    {
+      context.activateState("SkiJump");
+    } 
   }
 }
 
@@ -510,29 +506,123 @@ class SkiJumpState implements GameState
 {
   public void enter()
   {
-    System.out.println("enter");
+    
   }
  
   public void exit()
   {
-    System.out.println("exit");
+    
   }
  
   public void draw()
-  {     
+  { 
+        
+    renderer.drawSkybox(0,0,0,10000);
+    
+    // Test
     pushMatrix();
-    translate(300,300,-100);
+    translate(100, 100,-300);
     beginShape(TRIANGLE_STRIP);
-    fill(240,   0, 0); vertex(0, 0, 0);
+    fill(240,   0, 0); vertex(300, 0, 0);
     fill(240, 150, 0); vertex(80, 40, 38);
     fill(250, 250, 0); vertex(75, 88, 50);
-                       vertex(49, 85, 74);
+    fill(0, 250, 0);   vertex(49, 85, 74);
     endShape();
     popMatrix();
+    
+    renderer.drawText("Press B when ready...", 10, 30, -300, 1);
   } 
   
   public void interact(int elapsed)
   {
-     
+    if(controllers6DOF[0].buttonB || controllers6DOF[1].buttonB)
+    {
+      // Start
+    }      
   }  
 }
+
+class Renderer
+{
+  public void drawText(String message, float x, float y, float z, float scaler)
+  {
+    hint(DISABLE_DEPTH_TEST);
+    pushMatrix();
+      fill(200,255,100);
+      translate(x, y, z);
+      scale(scaler, scaler, 1);
+      textFont(fontFPS, 10);  
+      gl.glDisable(GL.GL_CULL_FACE);
+      text(message,0,0,0);
+      gl.glEnable(GL.GL_CULL_FACE);
+    popMatrix();
+    hint(ENABLE_DEPTH_TEST);  
+  } 
+  
+  public void drawSkybox(float x, float y, float z, float scaler)
+  {
+    pushMatrix();
+      
+      translate(-headX,-headY,-headZ);
+      scale(scaler, scaler, scaler);
+    
+      PVector colorTop = new PVector(0,0,50);
+      PVector colorBottom = new PVector(230,230,230);
+    
+      // TODO: how to disable outline drawing?!?
+    
+      gl.glDisable(GL.GL_CULL_FACE);
+      noLights();
+      
+      // Front
+      this.ColoredQuad( new PVector(-1,1,1), new PVector(-1,-1,1), new PVector(1,-1,1), new PVector(1,1,1),
+                        colorTop, colorBottom, colorBottom, colorTop);
+      
+      // Right                                 
+      this.ColoredQuad( new PVector(1,1,1), new PVector(1,-1,1), new PVector(1,-1,-1), new PVector(1,1,-1),
+                        colorTop, colorBottom, colorBottom, colorTop);
+              
+      // Left          
+      this.ColoredQuad( new PVector(-1,1,-1), new PVector(-1,-1,-1), new PVector(-1,-1,1), new PVector(-1,1,1),
+                        colorTop, colorBottom, colorBottom, colorTop);
+             
+      // Back           
+      this.ColoredQuad( new PVector(1,1,-1), new PVector(1,-1,-1), new PVector(-1,-1,-1), new PVector(-1,1,-1),
+                        colorTop, colorBottom, colorBottom, colorTop);
+      
+      // Top           
+      this.ColoredQuad( new PVector(-1,1,-1), new PVector(-1,1,1), new PVector(1,1,1), new PVector(1,1,-1),
+                        colorTop, colorTop, colorTop, colorTop);
+      
+      // Bottom           
+      this.ColoredQuad( new PVector(-1,-1,-1), new PVector(-1,-1,1), new PVector(1,-1,1), new PVector(1,-1,-1),
+                        colorBottom, colorBottom, colorBottom, colorBottom);
+      
+      lights();
+      gl.glEnable(GL.GL_CULL_FACE);
+    popMatrix();
+  }
+  
+  void TexturedQuad(PVector P1, PVector P2, PVector P3, PVector P4, PImage tex)
+  {
+    beginShape(QUADS);
+      texture(tex);
+      vertex (P1.x, P1.y, P1.z, 1, 0);
+      vertex (P2.x, P2.y, P2.z, 0, 0);
+      vertex (P3.x, P3.y, P3.z, 0, 1);
+      vertex (P4.x, P4.y, P4.z, 1, 1);
+    endShape();
+  }
+  
+  void ColoredQuad( PVector p1, PVector p2, PVector p3, PVector p4,
+                    PVector p1color, PVector p2color, PVector p3color, PVector p4color)
+  {
+    beginShape(QUADS);
+      fill(p1color.x, p1color.y, p1color.z); vertex (p1.x, p1.y, p1.z);
+      fill(p2color.x, p2color.y, p2color.z); vertex (p2.x, p2.y, p2.z);
+      fill(p3color.x, p3color.y, p3color.z); vertex (p3.x, p3.y, p3.z);
+      fill(p4color.x, p4color.y, p4color.z); vertex (p4.x, p4.y, p4.z);
+    endShape();
+  }
+}
+
