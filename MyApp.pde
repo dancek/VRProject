@@ -1,4 +1,3 @@
-import java.util.HashMap;
 import java.lang.Exception;
 import processing.opengl.*;
 
@@ -11,9 +10,19 @@ color grayishColor = color(128);
 final GameStateContext context = new GameStateContext();
 final Renderer renderer = new Renderer();
 
+/**
+ * Wavefront, Geometry and Face are defined in Wavefront.pde
+ */
+
+final Wavefront obj = new Wavefront();
+final HashMap geom = new HashMap();
+
 // This function is called only once in the setup() function
 void mySetup()
 {
+  // First parameter is just a name given to the geometry
+  geom.put("ramp", obj.load("ramp", "ruka_hyppyri1.obj"));
+  
   smooth(); 
   context.registerState("Menu", new MenuState());
   context.registerState("SkiJump", new SkiJumpState());
@@ -519,15 +528,16 @@ class SkiJumpState implements GameState
         
     renderer.drawSkybox(0,0,0,10000);
     
-    // Test
     pushMatrix();
-    translate(100, 100,-300);
-    beginShape(TRIANGLE_STRIP);
-    fill(240,   0, 0); vertex(300, 0, 0);
-    fill(240, 150, 0); vertex(80, 40, 38);
-    fill(250, 250, 0); vertex(75, 88, 50);
-    fill(0, 250, 0);   vertex(49, 85, 74);
-    endShape();
+    translate(100, 500, -2000);
+    scale(100,100,100);
+    gl.glDisable(GL.GL_CULL_FACE);
+    pushMatrix();
+    rotateZ(PI);
+    rotateY(PI/2);
+    renderer.drawGeometry((Geometry)geom.get("ramp"));
+    popMatrix();
+    gl.glEnable(GL.GL_CULL_FACE);
     popMatrix();
     
     renderer.drawText("Press B when ready...", 10, 30, -300, 1);
@@ -558,6 +568,32 @@ class Renderer
     popMatrix();
     hint(ENABLE_DEPTH_TEST);  
   } 
+  
+  public void drawGeometry(Geometry geom)
+  {
+    PVector colorTest = new PVector(200,0,0);
+    
+    for (int i = 0; i < geom.faces.size(); ++i)
+    {
+      Face face = (Face)geom.faces.get(i);
+      
+      if (face.count == 4)
+      {
+        this.ColoredQuad( (PVector)geom.vertices.get(face.vertexIndexes[0]),
+                          (PVector)geom.vertices.get(face.vertexIndexes[1]),
+                          (PVector)geom.vertices.get(face.vertexIndexes[2]),
+                          (PVector)geom.vertices.get(face.vertexIndexes[3]),
+                          colorTest, colorTest, colorTest, colorTest);
+      }
+      else if (face.count == 3)
+      {
+        this.ColoredTriangle( (PVector)geom.vertices.get(face.vertexIndexes[0]),
+                              (PVector)geom.vertices.get(face.vertexIndexes[1]),
+                              (PVector)geom.vertices.get(face.vertexIndexes[2]),
+                              colorTest, colorTest, colorTest);
+      }
+    }
+  }
   
   public void drawSkybox(float x, float y, float z, float scaler)
   {
@@ -622,6 +658,16 @@ class Renderer
       fill(p2color.x, p2color.y, p2color.z); vertex (p2.x, p2.y, p2.z);
       fill(p3color.x, p3color.y, p3color.z); vertex (p3.x, p3.y, p3.z);
       fill(p4color.x, p4color.y, p4color.z); vertex (p4.x, p4.y, p4.z);
+    endShape();
+  }
+  
+  void ColoredTriangle( PVector p1, PVector p2, PVector p3,
+                    PVector p1color, PVector p2color, PVector p3color)
+  {
+    beginShape(TRIANGLES);
+      fill(p1color.x, p1color.y, p1color.z); vertex (p1.x, p1.y, p1.z);
+      fill(p2color.x, p2color.y, p2color.z); vertex (p2.x, p2.y, p2.z);
+      fill(p3color.x, p3color.y, p3color.z); vertex (p3.x, p3.y, p3.z);
     endShape();
   }
 }
