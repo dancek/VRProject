@@ -9,6 +9,7 @@ color grayishColor = color(128);
 
 final GameStateContext context = new GameStateContext();
 final Renderer renderer = new Renderer();
+final Camera camera = new Camera();  // TODO: Camera class needs to be implemented
 
 /**
  * Wavefront, Geometry and Face are defined in Wavefront.pde
@@ -525,7 +526,8 @@ class SkiJumpState implements GameState
  
   public void draw()
   { 
-        
+    camera.applyCamera();    
+    
     renderer.drawSkybox(0,0,0,10000);
     
     pushMatrix();
@@ -545,6 +547,9 @@ class SkiJumpState implements GameState
   
   public void interact(int elapsed)
   {
+    // Doing this only once per cycle
+    camera.nextStep(elapsed, 0);
+    
     if(controllers6DOF[0].buttonB || controllers6DOF[1].buttonB)
     {
       // Start
@@ -672,3 +677,47 @@ class Renderer
   }
 }
 
+class Camera 
+{
+  private ArrayList waypoints;
+  
+  private PVector eye;
+  
+  public Camera()
+  {
+    this.eye = new PVector();
+  }
+  
+  public void setEye(PVector _eye)
+  {
+    this.eye = _eye;
+  }
+  
+  public void setCameraTrack(ArrayList _waypoints)
+  {
+    this.waypoints = _waypoints;
+  }
+ 
+  // Calculate the next camera position
+  public void nextStep(int elapsed, int type)
+  {
+    switch (type)
+    {
+      case 0:
+        this.Lerp(elapsed);
+        break;
+    }
+  }
+ 
+  // Linear interpolation
+  private void Lerp(int elapsed)
+  {
+   
+  }
+ 
+  // Apply the camera transformation
+  public void applyCamera()
+  {
+   
+  } 
+}
