@@ -201,8 +201,8 @@ class MenuState implements GameState
  
   public void draw()
   {
-    renderer.drawText("Press B to skijump", 10, 30, -300, 1);
-    renderer.drawText("TODO: cool graphics and maybe music.", 10, 50, -300, 1);
+    renderer.drawText("Press B to skijump", 10, 30, 0, 1);
+    renderer.drawText("TODO: cool graphics and maybe music.", 10, 50, 0, 1);
   } 
   
   public void interact(int elapsed)
@@ -228,8 +228,6 @@ class SkiJumpState implements GameState
  
   public void draw()
   { 
-    camera.applyCamera();    
-
     renderer.drawSkybox(0,0,0,10000);
     
     pushMatrix();
@@ -244,13 +242,14 @@ class SkiJumpState implements GameState
     gl.glEnable(GL.GL_CULL_FACE);
     popMatrix();
 
-    renderer.drawText("Press B when ready...", 10, 30, -300, 1);
+    renderer.drawText("Press B when ready...", 10, 30, 0, 1);
   } 
   
   public void interact(int elapsed)
   {
     // Doing this only once per cycle
     camera.nextStep(elapsed, 0);
+    camera.applyCamera();    
         
     // DEBUG: move camera with mouse and WSAD
     float MOUSE_SCALE = 0.01;
@@ -281,13 +280,16 @@ class Renderer
   {
     hint(DISABLE_DEPTH_TEST);
     pushMatrix();
-      fill(200,255,100);
-      translate(x, y, z);
-      scale(scaler, scaler, 1);
-      textFont(fontFPS, 10);  
-      gl.glDisable(GL.GL_CULL_FACE);
-      text(message,0,0,0);
-      gl.glEnable(GL.GL_CULL_FACE);
+    fill(200,255,100);
+    translate(HUDobjectWorldX(x,y,z,0),
+              HUDobjectWorldY(x,y,z,0),
+              HUDobjectWorldZ(x,y,z,0) );
+    RUISinverseCameraRotation();
+    scale(scaler, scaler, 1);
+    textFont(fontFPS, 10);  
+    gl.glDisable(GL.GL_CULL_FACE);
+    text(message,0,0,0);
+    gl.glEnable(GL.GL_CULL_FACE);
     popMatrix();
     hint(ENABLE_DEPTH_TEST);  
   } 
