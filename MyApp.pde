@@ -1,6 +1,9 @@
 import java.lang.Exception;
 import processing.opengl.*;
 
+// DEBUG MODE
+final boolean DEBUG = true;
+
 /* Place all your code into this file */
 
 // Your global variables
@@ -251,21 +254,21 @@ class SkiJumpState implements GameState
     camera.nextStep(elapsed, 0);
     camera.applyCamera();    
         
-    // DEBUG: move camera with mouse and WSAD
-    float MOUSE_SCALE = 0.01;
-    float KEY_SCALE = 5;
-    camera.yaw   += MOUSE_SCALE * (mouseX-pmouseX);
-    camera.pitch += MOUSE_SCALE * (mouseY-pmouseY);
-    if(keyPressed) {
-      PVector move = new PVector();
-      if(key == 'w') move.add(RUIScameraForward);
-      if(key == 's') move.sub(RUIScameraForward);
-      if(key == 'a') move.sub(RUIScameraRight);
-      if(key == 'd') move.add(RUIScameraRight);
-      move.mult(KEY_SCALE);
-      camera.move(move);
+    if(DEBUG) { // move camera with mouse and WSAD
+      float MOUSE_SCALE = 0.01;
+      float KEY_SCALE = 5;
+      camera.yaw   += MOUSE_SCALE * (mouseX-pmouseX);
+      camera.pitch += MOUSE_SCALE * (mouseY-pmouseY);
+      if(keyPressed) {
+        PVector move = new PVector();
+        if(key == 'w') move.add(RUIScameraForward);
+        if(key == 's') move.sub(RUIScameraForward);
+        if(key == 'a') move.sub(RUIScameraRight);
+        if(key == 'd') move.add(RUIScameraRight);
+        move.mult(KEY_SCALE);
+        camera.move(move);
+      }
     }
-    // end of DEBUG
     
     if(controllers6DOF[0].buttonB || controllers6DOF[1].buttonB)
     {
