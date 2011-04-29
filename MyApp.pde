@@ -42,6 +42,8 @@ void myDraw()
   // scale(), applyMatrix(), box(), sphere() etc.
   // DO NOT use projection matrix altering functions like perspective(), 
   // camera(), resetMatrix(), frustum(), beginCamera(), etc.
+  camera.applyCamera();
+  
   context.draw();
 }
 
@@ -252,6 +254,21 @@ class SkiJumpState implements GameState
     // Doing this only once per cycle
     camera.nextStep(elapsed, 0);
     
+    // DEBUG: move camera with mouse and WSAD
+    float MOUSE_SCALE = 0.01;
+    float KEY_SCALE = 1;
+    camera.yaw   += MOUSE_SCALE * (mouseX-pmouseX);
+    camera.pitch += MOUSE_SCALE * (mouseY-pmouseY);
+    if(keyPressed) {
+      int forward = 0, right = 0;
+      if(key == 'w') forward++;
+      if(key == 's') forward--;
+      if(key == 'a') right--;
+      if(key == 'd') right++;
+      camera.relativeMove(KEY_SCALE * forward, KEY_SCALE * right, 0);
+    }
+    // end of DEBUG
+    
     if(controllers6DOF[0].buttonB || controllers6DOF[1].buttonB)
     {
       // Start
@@ -384,10 +401,17 @@ class Camera
   private ArrayList waypoints;
   
   private PVector eye;
+  // camera orientation as three angles -- see http://en.wikipedia.org/wiki/Aircraft_principal_axes
+  float yaw;
+  float pitch;
+  float roll;
   
   public Camera()
   {
     this.eye = new PVector();
+    this.yaw = 0;
+    this.pitch = 0;
+    this.roll = 0;
   }
   
   public void setEye(PVector _eye)
@@ -395,6 +419,12 @@ class Camera
     this.eye = _eye;
   }
   
+  public void move(float _x, float _y, float _z) {
+    this.eye.x += _x;
+    this.eye.y += _y;
+    this.eye.z += _z;
+  }
+    
   public void setCameraTrack(ArrayList _waypoints)
   {
     this.waypoints = _waypoints;
@@ -420,6 +450,7 @@ class Camera
   // Apply the camera transformation
   public void applyCamera()
   {
-   
+     RUIScameraPosition(this.eye.x, this.eye.y, this.eye.z);
+     RUIScameraOrient(this.yaw, this.pitch, this.roll);
   } 
 }
