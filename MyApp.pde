@@ -132,8 +132,6 @@ interface GameState
   void exit();
   
   void draw();
-  
-  void drawHUD();
  
   void interact(int elapsed); 
 }
@@ -185,9 +183,6 @@ class GameStateContext
   public void draw()
   {
     this.current.draw();
-    // draw texts separately in a "HUD"
-    RUISinverseCameraTransform();
-    this.current.drawHUD();
   }
   
 }
@@ -206,9 +201,6 @@ class MenuState implements GameState
  
   public void draw()
   {
-  }
-  
-  public void drawHUD() {
     renderer.drawText("Press B to skijump", 10, 30, -300, 1);
     renderer.drawText("TODO: cool graphics and maybe music.", 10, 50, -300, 1);
   } 
@@ -237,7 +229,7 @@ class SkiJumpState implements GameState
   public void draw()
   { 
     camera.applyCamera();    
-    
+
     renderer.drawSkybox(0,0,0,10000);
     
     pushMatrix();
@@ -251,9 +243,7 @@ class SkiJumpState implements GameState
     popMatrix();
     gl.glEnable(GL.GL_CULL_FACE);
     popMatrix();
-  }
-  
-  public void drawHUD() {
+
     renderer.drawText("Press B when ready...", 10, 30, -300, 1);
   } 
   
@@ -261,7 +251,7 @@ class SkiJumpState implements GameState
   {
     // Doing this only once per cycle
     camera.nextStep(elapsed, 0);
-    
+        
     // DEBUG: move camera with mouse and WSAD
     float MOUSE_SCALE = 0.01;
     float KEY_SCALE = 5;
@@ -465,5 +455,5 @@ class Camera
   {
      RUIScameraPosition(this.eye.x, this.eye.y, this.eye.z);
      RUIScameraOrient(this.yaw, this.pitch, this.roll);
-  } 
+  }
 }
