@@ -42,8 +42,6 @@ void myDraw()
   // scale(), applyMatrix(), box(), sphere() etc.
   // DO NOT use projection matrix altering functions like perspective(), 
   // camera(), resetMatrix(), frustum(), beginCamera(), etc.
-  camera.applyCamera();
-  
   context.draw();
 }
 
@@ -134,6 +132,8 @@ interface GameState
   void exit();
   
   void draw();
+  
+  void drawHUD();
  
   void interact(int elapsed); 
 }
@@ -185,6 +185,9 @@ class GameStateContext
   public void draw()
   {
     this.current.draw();
+    // draw texts separately in a "HUD"
+    RUISinverseCameraTransform();
+    this.current.drawHUD();
   }
   
 }
@@ -203,6 +206,9 @@ class MenuState implements GameState
  
   public void draw()
   {
+  }
+  
+  public void drawHUD() {
     renderer.drawText("Press B to skijump", 10, 30, -300, 1);
     renderer.drawText("TODO: cool graphics and maybe music.", 10, 50, -300, 1);
   } 
@@ -245,7 +251,9 @@ class SkiJumpState implements GameState
     popMatrix();
     gl.glEnable(GL.GL_CULL_FACE);
     popMatrix();
-    
+  }
+  
+  public void drawHUD() {
     renderer.drawText("Press B when ready...", 10, 30, -300, 1);
   } 
   
@@ -256,16 +264,17 @@ class SkiJumpState implements GameState
     
     // DEBUG: move camera with mouse and WSAD
     float MOUSE_SCALE = 0.01;
-    float KEY_SCALE = 1;
+    float KEY_SCALE = 5;
     camera.yaw   += MOUSE_SCALE * (mouseX-pmouseX);
     camera.pitch += MOUSE_SCALE * (mouseY-pmouseY);
     if(keyPressed) {
-      int forward = 0, right = 0;
-      if(key == 'w') forward++;
-      if(key == 's') forward--;
-      if(key == 'a') right--;
-      if(key == 'd') right++;
-      camera.relativeMove(KEY_SCALE * forward, KEY_SCALE * right, 0);
+      PVector move = new PVector();
+      if(key == 'w') move.add(RUIScameraForward);
+      if(key == 's') move.sub(RUIScameraForward);
+      if(key == 'a') move.sub(RUIScameraRight);
+      if(key == 'd') move.add(RUIScameraRight);
+      move.mult(KEY_SCALE);
+      camera.move(move);
     }
     // end of DEBUG
     
@@ -423,6 +432,10 @@ class Camera
     this.eye.x += _x;
     this.eye.y += _y;
     this.eye.z += _z;
+  }
+  
+  public void move(PVector diff) {
+    this.eye.add(diff);
   }
     
   public void setCameraTrack(ArrayList _waypoints)
