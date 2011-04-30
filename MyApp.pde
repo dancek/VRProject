@@ -234,18 +234,21 @@ class SkiJumpState implements GameState
     renderer.drawSkybox(0,0,0,10000);
     
     pushMatrix();
-    translate(100, 500, -2000);
+    translate(750, 800, -1200);
     scale(100,100,100);
     gl.glDisable(GL.GL_CULL_FACE);
     pushMatrix();
     rotateZ(PI);
-    rotateY(PI/2);
+    rotateY(PI);
     renderer.drawGeometry((Geometry)geom.get("ramp"));
     popMatrix();
     gl.glEnable(GL.GL_CULL_FACE);
     popMatrix();
 
     renderer.drawText("Press B when ready...", 10, 30, 0, 1);
+    if(DEBUG) {
+      renderer.drawText("("+RUIScamX+","+RUIScamY+","+RUIScamZ+")", 10, 200, 0, 1);
+    }
   } 
   
   public void interact(int elapsed)
@@ -273,6 +276,14 @@ class SkiJumpState implements GameState
     if(controllers6DOF[0].buttonB || controllers6DOF[1].buttonB)
     {
       // Start
+      // a track for testing
+      ArrayList cameraTrack = new ArrayList();
+      cameraTrack.add(new PVector(0,0,0));
+      cameraTrack.add(new PVector(0,250,-350));
+      cameraTrack.add(new PVector(0,250,-400));
+      cameraTrack.add(new PVector(0,300,-700));
+      cameraTrack.add(new PVector(0,400,-800));
+      camera.setCameraTrack(cameraTrack);
     }      
   }  
 }
@@ -410,12 +421,16 @@ class Camera
   float pitch;
   float roll;
   
+  float speed;
+  
   public Camera()
   {
     this.eye = new PVector();
     this.yaw = 0;
     this.pitch = 0;
     this.roll = 0;
+    // constant speed for testing
+    this.speed = 200;
   }
   
   public void setEye(PVector _eye)
@@ -452,7 +467,29 @@ class Camera
   // Linear interpolation
   private void Lerp(int elapsed)
   {
-   
+    if (this.waypoints != null) {
+      float distance = this.speed * elapsed / 1000;
+      float travelled = 0;
+      PVector tmp = new PVector();
+      PVector next;
+      while (!this.waypoints.isEmpty() && travelled < distance) {
+        next = (PVector) this.waypoints.get(0);
+        tmp.set(next);
+        tmp.sub(this.eye);
+        if (tmp.mag() > (distance - travelled)) {
+          // travel towards next waypoint
+          tmp.normalize();
+          tmp.mult(distance - travelled);
+          this.eye.add(tmp);
+          travelled = distance;
+        } else {
+          // travel past next waypoint
+          travelled += tmp.mag();
+          this.eye.set(next);
+          this.waypoints.remove(0);
+        }
+      }
+    }
   }
  
   // Apply the camera transformation
